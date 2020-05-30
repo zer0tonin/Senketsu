@@ -6,6 +6,6 @@ WORKDIR /app
 USER deno
 
 COPY . /app
-RUN deno cache index.ts
+RUN deno cache src/app.ts
 
-CMD ["run", "--allow-net", "index.ts"]
+CMD ["run", "--allow-net", "--allow-read", "src/app.ts"]
