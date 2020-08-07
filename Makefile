@@ -4,3 +4,6 @@ build:
 
 run: build
 	docker-compose up senketsu
+
+dev:
+	go run src/main.go

@@ -1,0 +1,46 @@
+/* palette: https://coolors.co/edf2f4-ff7751-a8a8a8-80b0b0-011d27 */
+body {
+    background-color: #EDF2F4;
+    font-family: 'Poppins', sans-serif;
+}
+
+.flex-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items:center;
+    width: 100%;
+    height: 100%;
+}
+
+.upload-container {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    justify-content: center;
+    align-items:center;
+    max-width: 1200px;
+    min-height: 200px;
+    background-color: #A8A8A8;
+    border-radius: 3px;
+    box-shadow: -3px -3px 3px rgba(0, 0, 0, .5);
+    padding: 1em;
+    color: #011D27;
+}
+
+[type="file"] {
+    clip: rect(0, 0, 0, 0);
+    position: absolute;
+}
+
+[type="file"] + label {
+    background-color: #FF7751;
+    box-shadow: -1px -1px 1px rgba(0, 0, 0, .5);
+    border-radius: 3px;
+    cursor: pointer;
+    display: inline-block;
+    font-weight: 700;
+    line-height: 4em;
+    padding-left: 2em;
+    padding-right: 2em;
+}
