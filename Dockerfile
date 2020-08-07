@@ -1,11 +1,13 @@
-FROM hayd/deno:latest
+FROM ubuntu:latest
 
 EXPOSE 8080
 
 WORKDIR /app
-USER deno
 
-COPY . /app
-RUN deno cache src/app.ts
+RUN useradd senketsu
+USER senketsu
 
-CMD ["run", "--allow-net", "--allow-read", "src/app.ts"]
+COPY senketsu .
+COPY templates ./templates
+
+CMD ["./senketsu"]
