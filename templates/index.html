@@ -7,8 +7,11 @@
     <body>
         <div class="flex-container">
             <div class="upload-container">
-                <input type="file" id="gif" />
-                <label for="gif">Browse Files</label>
+                <form action="upload" method="post" enctype="multipart/form-data">
+                    <input type="file" id="gif" accept="image/gif, video/mpeg, video/webm" name="file" />
+                    <label for="gif">Browse Files</label>
+                    <input type="submit" name="submit">
+                </form>
             </div>
         </div>
     </body>

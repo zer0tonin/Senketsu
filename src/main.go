@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"net/http/httputil"
 )
 
 type HelloData struct {
@@ -22,6 +23,15 @@ func main() {
 
 	http.HandleFunc("/index.css", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./templates/index.css")
+	})
+
+	http.HandleFunc("/upload", func(w http.ResponseWriter, r *http.Request) {
+		bytes, err := httputil.DumpRequest(r, true)
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			fmt.Println(string(bytes))
+		}
 	})
 
 	fmt.Println("Listening on port 8080")
