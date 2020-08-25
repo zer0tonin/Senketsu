@@ -3,8 +3,9 @@ package main
 import (
 	"fmt"
 	"html/template"
+	"mime"
+	"mime/multipart"
 	"net/http"
-	"net/http/httputil"
 )
 
 type HelloData struct {
@@ -26,12 +27,18 @@ func main() {
 	})
 
 	http.HandleFunc("/upload", func(w http.ResponseWriter, r *http.Request) {
-		bytes, err := httputil.DumpRequest(r, true)
+		_, params, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
 		if err != nil {
 			fmt.Println(err)
-		} else {
-			fmt.Println(string(bytes))
+			return
 		}
+		mr := multipart.NewReader(r.Body, params["boundary"])
+		part, err := mr.NextPart()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println(part.FileName())
 	})
 
 	fmt.Println("Listening on port 8080")
