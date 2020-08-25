@@ -9,5 +9,6 @@ USER senketsu
 
 COPY senketsu .
 COPY templates ./templates
+COPY config.yaml .
 
 CMD ["./senketsu"]

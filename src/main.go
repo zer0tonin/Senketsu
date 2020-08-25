@@ -6,20 +6,27 @@ import (
 	"mime"
 	"mime/multipart"
 	"net/http"
+
+	"github.com/spf13/viper"
 )
 
-type HelloData struct {
-	Name string
+func config() {
+	viper.SetConfigName("config")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath(".")
+	err := viper.ReadInConfig()
+	if err != nil {
+		panic(fmt.Sprintf("Failed to load config"))
+	} else {
+		fmt.Println(viper.GetString("test"))
+	}
 }
 
-func main() {
+func serve() {
 	tmpl := template.Must(template.ParseFiles("./templates/index.html"))
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		data := HelloData{
-			Name: "Alice",
-		}
-		tmpl.Execute(w, data)
+		tmpl.Execute(w, nil)
 	})
 
 	http.HandleFunc("/index.css", func(w http.ResponseWriter, r *http.Request) {
@@ -43,4 +50,9 @@ func main() {
 
 	fmt.Println("Listening on port 8080")
 	http.ListenAndServe(":8080", nil)
+}
+
+func main() {
+	config()
+	serve()
 }
