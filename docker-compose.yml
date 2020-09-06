@@ -2,5 +2,21 @@ version: '3'
 services:
   senketsu:
     build: .
+    depends_on:
+      - minio
     ports:
     - 8080:8080
+
+  minio:
+    image: minio/minio:latest
+    environment:
+      MINIO_ACCESS_KEY: test-access-key
+      MINIO_SECRET_KEY: test-secret-key
+    volumes:
+      - minio-data:/data
+    ports:
+      - 9000:9000
+    command: ["server", "/data"]
+
+volumes:
+  minio-data:
