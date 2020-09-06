@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 	"html/template"
-	"mime"
-	"mime/multipart"
 	"net/http"
 
 	"github.com/minio/minio-go/v7"
@@ -13,8 +11,9 @@ import (
 )
 
 type Services struct {
-	S3Client  *minio.Client
-	Templates map[string]*template.Template
+	MultipartParser *MultipartParser
+	S3Client        *S3Client
+	Templates       map[string]*template.Template
 }
 
 var s Services
@@ -27,6 +26,9 @@ func init() {
 	if err != nil {
 		panic("Failed to load config")
 	}
+
+	templates := make(map[string]*template.Template)
+	templates["index"] = template.Must(template.ParseFiles("./templates/index.html"))
 
 	minioClient, err := minio.New(
 		viper.GetString("s3.endpoint"),
@@ -43,12 +45,16 @@ func init() {
 		panic("Failed to create S3 client")
 	}
 
-	templates := make(map[string]*template.Template)
-	templates["index"] = template.Must(template.ParseFiles("./templates/index.html"))
+	multipartParser := NewMultipartParser(viper.GetInt64("multipartParser.maxMem"))
+	s3Client := NewS3Client(
+		viper.GetString("s3.bucket"),
+		minioClient,
+	)
 
 	s = Services{
-		S3Client:  minioClient,
-		Templates: templates,
+		MultipartParser: multipartParser,
+		S3Client:        s3Client,
+		Templates:       templates,
 	}
 }
 
@@ -64,41 +70,18 @@ func main() {
 	http.HandleFunc("/upload", func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		_, params, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
+		fileHeaders, err := s.MultipartParser.GetFileHeaders(r)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-		fmt.Println("Parsed MediaType")
 
-		mr := multipart.NewReader(r.Body, params["boundary"])
-		form, err := mr.ReadForm(134217728) // 128MiB
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		fmt.Println("Parsed Multipart Form")
-
-		for _, fileHeaders := range form.File {
-			for _, fileHeader := range fileHeaders {
-				file, err := fileHeader.Open()
-				if err != nil {
-					fmt.Println(err)
-					continue
-				}
-				_, err = s.S3Client.PutObject(
-					ctx,
-					"senketsu-test",
-					fileHeader.Filename,
-					file,
-					fileHeader.Size,
-					minio.PutObjectOptions{},
-				)
-				if err != nil {
-					fmt.Println(err)
-				} else {
-					fmt.Printf("Put Object %s to S3\n", fileHeader.Filename)
-				}
+		for _, fileHeader := range fileHeaders {
+			s.S3Client.Upload(ctx, fileHeader)
+			if err != nil {
+				fmt.Println(err)
+			} else {
+				fmt.Printf("Put Object %s to S3\n", fileHeader.Filename)
 			}
 		}
 	})

@@ -1,5 +1,8 @@
+multipartParser:
+  maxMem: 134217728
 s3:
   endpoint: my.s3.bucket
   accessKeyID: my-access-key
   secretAccessKey: my-secret-access-key
   useSSL: true
+  bucketName: senketsu-test
