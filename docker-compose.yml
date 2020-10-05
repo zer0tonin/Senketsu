@@ -4,8 +4,9 @@ services:
     build: .
     depends_on:
       - minio
+      - redis
     ports:
-    - 8080:8080
+      - 8080:8080
 
   minio:
     image: minio/minio:latest
@@ -17,6 +18,12 @@ services:
     ports:
       - 9000:9000
     command: ["server", "/data"]
+
+  redis:
+    image: redis:latest
+    ports:
+      - 6379:6379
+
 
 volumes:
   minio-data:
