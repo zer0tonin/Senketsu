@@ -1,4 +1,4 @@
-package service
+package services
 
 import (
 	"context"
@@ -21,61 +21,46 @@ func (r *RedisTagRepository) makeKey() string {
 }
 
 func (r *RedisTagRepository) makeImageKey(id string) string {
-	return fmt.Sprintf("%s:tag:%d:images", r.prefix, slug.Make(id))
-}
-
-func (r *RedisTagRepository) Add(ctx context.Context, tag *model.Tag) (*model.Tag, error) {
-	return r.Save(ctx, tag)
+	return fmt.Sprintf("%s:tag:%s:images", r.prefix, slug.Make(id))
 }
 
 func (r *RedisTagRepository) Get(ctx context.Context, id string) (tag *model.Tag, err error) {
 	result := r.client.HGet(ctx, r.makeKey(), id)
-	err = result.Err()
-	if err != nil {
+	if err = result.Err(); err != nil {
 		return
 	}
 
 	err = json.Unmarshal([]byte(result.Val()), tag)
-	return tag, err
-}
-
-func (r *RedisTagRepository) GetImages(ctx context.Context, tag *model.Tag) (images []string, err error) {
-	result := r.client.Get(ctx, r.makeImageKey(tag.Name))
-	err = result.Err()
-	if err != nil {
-		return
-	}
-
-	err = json.Unmarshal([]byte(result.Val()), images)
 	return
 }
 
 func (r *RedisTagRepository) List(ctx context.Context) (tags []*model.Tag, err error) {
 	result := r.client.HGetAll(ctx, r.makeKey())
-	err = result.Err()
-	if err != nil {
+	if err = result.Err(); err != nil {
 		return
 	}
 
 	for _, ser := range result.Val() {
 		var tag *model.Tag
-		err = json.Unmarshal([]byte(ser), tag)
+		if err := json.Unmarshal([]byte(ser), tag); err != nil {
+			return nil, err
+		}
+		tags = append(tags, tag)
 	}
 	return
 }
 
 func (r *RedisTagRepository) Save(ctx context.Context, tag *model.Tag) (*model.Tag, error) {
-	ser, err := json.Marshal(tag)
-	if err != nil {
+	if ser, err := json.Marshal(tag); err != nil {
 		return nil, err
+	} else {
+		result := r.client.HSet(
+			ctx,
+			r.makeKey(),
+			slug.Make(tag.Name),
+			ser,
+			0,
+		)
+		return tag, result.Err()
 	}
-
-	result := r.client.HSet(
-		ctx,
-		r.makeKey(),
-		slug.Make(tag.Name),
-		ser,
-		0,
-	)
-	return tag, result.Err()
 }

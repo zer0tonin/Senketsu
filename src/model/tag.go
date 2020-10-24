@@ -7,43 +7,34 @@ import (
 )
 
 type TagRepository interface {
-	Add(ctx context.Context, tag *Tag) (*Tag, error)
 	Get(ctx context.Context, id string) (*Tag, error)
-	GetImages(ctx context.Context, tag *Tag) ([]string, error)
 	List(ctx context.Context) ([]*Tag, error)
 	Save(ctx context.Context, tag *Tag) (*Tag, error)
 }
 
 type Tag struct {
-	Name   string `json:"name"`
-	Images []string
+	Name   string   `json:"name"`
+	Images []string `json:"images"`
 }
 
-func (t *Tag) GetImages(ctx context.Context) ([]string, error) {
+func (t *Tag) getImages() []string {
 	if t.Images == nil {
-		images, err := S.TagRepository.GetImages(ctx, t)
-		if err != nil {
-			return nil, err
-		}
-		t.Images = images
+		t.Images = make([]string, 1)
 	}
-	return t.Images, nil
+	return t.Images
 }
 
 func (t *Tag) AddImage(ctx context.Context, image *Image) error {
-	images, err := S.TagRepository.GetImages(ctx, t)
-	if err != nil {
-		return err
-	}
-	t.Images = append(images, image.ID)
+	t.Images = append(t.getImages(), image.ID)
 	return nil
 }
 
+func (t *Tag) GetImages(ctx context.Context, image *Image) ([]*Image, error) {
+	return S.ImageRepository.GetMany(ctx, t.getImages())
+}
+
 func (t *Tag) GetRandomImage(ctx context.Context) (*Image, error) {
-	images, err := t.GetImages(ctx)
-	if err != nil {
-		return nil, err
-	}
+	images := t.getImages()
 	if len(images) == 0 {
 		return nil, fmt.Errorf("No images found for this tag")
 	}
@@ -51,8 +42,6 @@ func (t *Tag) GetRandomImage(ctx context.Context) (*Image, error) {
 	return S.ImageRepository.Get(ctx, t.Images[pick])
 }
 
-func (t *Tag) Save(ctx context.Context) (*Tag, error) {
-	tag, err := S.TagRepository.Save(ctx, t)
-	// save images
-	return tag, err
+func (t *Tag) Save(ctx context.Context) (tag *Tag, err error) {
+	return S.TagRepository.Save(ctx, t)
 }
