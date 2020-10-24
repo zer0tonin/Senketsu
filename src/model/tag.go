@@ -2,47 +2,57 @@ package model
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 )
 
 type TagRepository interface {
 	Add(ctx context.Context, tag *Tag) (*Tag, error)
+	Get(ctx context.Context, id string) (*Tag, error)
+	GetImages(ctx context.Context, tag *Tag) ([]string, error)
+	List(ctx context.Context) ([]*Tag, error)
 	Save(ctx context.Context, tag *Tag) (*Tag, error)
-	GetImageIDs(ctx context.Context, tag *Tag) ([]string, error)
 }
 
 type Tag struct {
-	ID              *int   `json:"id"`
-	Name            string `json:"name"`
-	tagRepository   TagRepository
-	imageRepository ImageRepository
+	Name   string `json:"name"`
+	Images []string
 }
 
-func NewTag(
-	ctx context.Context,
-	tagRepository TagRepository,
-	imageRepository ImageRepository,
-	name string,
-) (*Tag, error) {
-	tag := &Tag{
-		Name:          name,
-		tagRepository: tagRepository,
+func (t *Tag) GetImages(ctx context.Context) ([]string, error) {
+	if t.Images == nil {
+		images, err := S.TagRepository.GetImages(ctx, t)
+		if err != nil {
+			return nil, err
+		}
+		t.Images = images
 	}
-	return tag.Save(ctx)
+	return t.Images, nil
 }
 
-func (t *Tag) Save(ctx context.Context) (*Tag, error) {
-	if t.ID == nil {
-		return t.tagRepository.Add(ctx, t)
+func (t *Tag) AddImage(ctx context.Context, image *Image) error {
+	images, err := S.TagRepository.GetImages(ctx, t)
+	if err != nil {
+		return err
 	}
-	return t.tagRepository.Save(ctx, t)
+	t.Images = append(images, image.ID)
+	return nil
 }
 
 func (t *Tag) GetRandomImage(ctx context.Context) (*Image, error) {
-	imagesIDs, err := t.tagRepository.GetImageIDs(ctx, t)
+	images, err := t.GetImages(ctx)
 	if err != nil {
 		return nil, err
 	}
-	pick := rand.Int() % len(imagesIDs)
-	return t.imageRepository.Get(ctx, imagesIDs[pick])
+	if len(images) == 0 {
+		return nil, fmt.Errorf("No images found for this tag")
+	}
+	pick := rand.Int() % len(images)
+	return S.ImageRepository.Get(ctx, t.Images[pick])
+}
+
+func (t *Tag) Save(ctx context.Context) (*Tag, error) {
+	tag, err := S.TagRepository.Save(ctx, t)
+	// save images
+	return tag, err
 }
