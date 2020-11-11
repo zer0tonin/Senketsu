@@ -21,9 +21,6 @@ func init() {
 		panic("Failed to load config")
 	}
 
-	templates := make(map[string]*template.Template)
-	templates["index"] = template.Must(template.ParseFiles("./templates/index.html"))
-
 	multipartParser := services.NewMultipartParser(viper.GetInt64("multipartParser.maxMem"))
 
 	s3Storage := services.NewS3Storage(
@@ -47,13 +44,19 @@ func init() {
 		RequestParser:   multipartParser,
 		ImageRepository: redisImageRepository,
 		FileStorage:     s3Storage,
-		Templates:       templates,
 	}
 }
 
 func main() {
+	templates := make(map[string]*template.Template)
+	templates["index"] = template.Must(template.ParseFiles("./templates/index.html"))
+	templates["upload"] = template.Must(template.ParseFiles("./templates/upload.html"))
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		model.S.Templates["index"].Execute(w, nil)
+		err := templates["index"].Execute(w, nil)
+		if err != nil {
+			fmt.Println(err)
+		}
 	})
 
 	http.HandleFunc("/index.css", func(w http.ResponseWriter, r *http.Request) {
@@ -62,10 +65,17 @@ func main() {
 
 	http.HandleFunc("/upload", func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		model.NewImageFromRequest(ctx, r)
-		// TODO: don't ignore errors
-		// TODO: use different error types for the bad request, internal error, etc
-		// TODO: redirect to image view
+		images, errs := model.NewImageFromRequest(ctx, r)
+		err := templates["upload"].Execute(
+			w,
+			map[string]interface{}{
+				"images": images,
+				"errs":   errs,
+			},
+		)
+		if err != nil {
+			fmt.Println(err)
+		}
 	})
 
 	fmt.Println("Listening on port 8080")

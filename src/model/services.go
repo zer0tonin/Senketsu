@@ -2,7 +2,6 @@ package model
 
 import (
 	"context"
-	"html/template"
 	"net/http"
 )
 
@@ -28,12 +27,17 @@ type FileStorage interface {
 	GetURI(image *Image) string
 }
 
+type Views interface {
+	Index(w http.ResponseWriter)
+	UploadResults(w http.ResponseWriter, images []*Image)
+}
+
 type Services struct {
 	ImageRepository ImageRepository
 	TagRepository   TagRepository
 	RequestParser   RequestParser
 	FileStorage     FileStorage
-	Templates       map[string]*template.Template
+	Views           Views
 }
 
 var S Services
