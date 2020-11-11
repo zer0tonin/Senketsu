@@ -3,51 +3,63 @@ package model
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/google/uuid"
 )
 
 type Image struct {
-	ID string `json:"id"`
+	ID        string `json:"id"`
+	Extension string `json:"id"`
 	//Uploader string   `json:"uploader"`
 	//Tags     []string `json:"tags"`
+	Reader io.Reader
+	Size   int64
 }
 
-func NewImageFromRequest(ctx context.Context, r *http.Request) (*Image, error) {
-	fileHeaders, err := S.RequestParser.ParseForm(r)
-	if err != nil {
-		return nil, err
+func NewImageFromRequest(ctx context.Context, r *http.Request) (images []*Image, errs []error) {
+	images, errs = S.RequestParser.ParseForm(r)
+	if len(errs) != 0 {
+		return nil, errs
 	}
 
-	if len(fileHeaders) != 1 {
-		return nil, fmt.Errorf("Please upload a single image")
+	for _, image := range images {
+		imageID, err := uuid.NewRandom()
+		if err != nil {
+			errs = append(errs, err)
+		}
+		image.ID = imageID.String()
 	}
 
-	imageID, err := uuid.NewRandom()
-	if err != nil {
-		return nil, err
+	if len(errs) != 0 {
+		return nil, errs
 	}
 
-	image := &Image{
-		ID: imageID.String(),
+	for _, image := range images {
+		err := S.FileStorage.WriteFile(ctx, image)
+		if err != nil {
+			errs = append(errs, err)
+			continue
+		}
+		fmt.Printf("Put image %s to S3\n", image.GetFilename())
+		// TODO: risks of orphan images
+		_, err = image.Save(ctx)
+		if err != nil {
+			errs = append(errs, err)
+		}
 	}
-
-	fileHeader := fileHeaders[0]
-	err = S.FileStorage.WriteFile(ctx, fileHeader)
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Printf("Put image %s to S3\n", fileHeader.Filename)
-	}
-
-	image, err = image.Save(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return image, nil
+	return images, errs
 }
 
 func (i *Image) Save(ctx context.Context) (*Image, error) {
 	return S.ImageRepository.Save(ctx, i)
+}
+
+func (i *Image) GetURI() string {
+	return S.FileStorage.GetURI(i)
+}
+
+func (i *Image) GetFilename() string {
+	return fmt.Sprintf("%s.%s", i.ID, i.Extension)
 }

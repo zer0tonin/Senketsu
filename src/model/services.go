@@ -3,7 +3,6 @@ package model
 import (
 	"context"
 	"html/template"
-	"mime/multipart"
 	"net/http"
 )
 
@@ -21,11 +20,12 @@ type ImageRepository interface {
 }
 
 type RequestParser interface {
-	ParseForm(r *http.Request) (result []*multipart.FileHeader, err error)
+	ParseForm(r *http.Request) (result []*Image, errs []error)
 }
 
 type FileStorage interface {
-	WriteFile(ctx context.Context, fileHeader *multipart.FileHeader) error
+	WriteFile(ctx context.Context, image *Image) error
+	GetURI(image *Image) string
 }
 
 type Services struct {

@@ -2,15 +2,18 @@ package services
 
 import (
 	"context"
-	"mime/multipart"
+	"fmt"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
+
+	"github.com/zer0tonin/senketsu/src/model"
 )
 
 type S3Storage struct {
 	bucketName string
 	client     *minio.Client
+	baseURI    string
 }
 
 func NewS3Storage(
@@ -35,24 +38,35 @@ func NewS3Storage(
 		panic("Failed to create S3 client")
 	}
 
+	var prefix string
+	if useSSL {
+		prefix = "https"
+	} else {
+		prefix = "http"
+	}
+
 	return &S3Storage{
 		bucketName: bucketName,
 		client:     minioClient,
+		baseURI:    fmt.Sprintf("%s://%s/%s", prefix, endpoint, bucketName),
 	}
 }
 
-func (s *S3Storage) WriteFile(ctx context.Context, fileHeader *multipart.FileHeader) error {
-	file, err := fileHeader.Open()
-	if err != nil {
-		return err
-	}
-	_, err = s.client.PutObject(
+func (s *S3Storage) WriteFile(
+	ctx context.Context,
+	image *model.Image,
+) error {
+	_, err := s.client.PutObject(
 		ctx,
 		s.bucketName,
-		fileHeader.Filename,
-		file,
-		fileHeader.Size,
+		image.GetFilename(),
+		image.Reader,
+		image.Size, //fileHeader.Size,
 		minio.PutObjectOptions{},
 	)
 	return err
+}
+
+func (s *S3Storage) GetURI(image *model.Image) string {
+	return fmt.Sprintf("%s/%s", s.baseURI, image.GetFilename())
 }

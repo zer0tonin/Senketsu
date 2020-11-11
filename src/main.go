@@ -63,6 +63,9 @@ func main() {
 	http.HandleFunc("/upload", func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		model.NewImageFromRequest(ctx, r)
+		// TODO: don't ignore errors
+		// TODO: use different error types for the bad request, internal error, etc
+		// TODO: redirect to image view
 	})
 
 	fmt.Println("Listening on port 8080")
