@@ -1,49 +1,53 @@
 package model
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+
+	"github.com/google/uuid"
 )
 
-type ImageRepository interface {
-	Get(ctx context.Context, id string) (*Image, error)
-	GetMany(ctx context.Context, ids []string) ([]*Image, error)
-	List(ctx context.Context) ([]*Image, error)
-	Save(ctx context.Context, image *Image) (*Image, error)
-}
-
 type Image struct {
-	ID  string `json:"id"`
-	Uploader string `json:"uploader"`
-	Tags []string `json:"tags"`
+	ID string `json:"id"`
+	//Uploader string   `json:"uploader"`
+	//Tags     []string `json:"tags"`
 }
 
-func FromRequest(ctx context.Context, r *http.Request) []*Image {
-	fileHeaders, err := s.RequestParser.GetFileHeaders(r)
-	var images = make([]*Image, 0, len(fileHeaders))
+func NewImageFromRequest(ctx context.Context, r *http.Request) (*Image, error) {
+	fileHeaders, err := S.RequestParser.ParseForm(r)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(fileHeaders) != 1 {
+		return nil, fmt.Errorf("Please upload a single image")
+	}
+
+	imageID, err := uuid.NewRandom()
+	if err != nil {
+		return nil, err
+	}
+
+	image := &Image{
+		ID: imageID.String(),
+	}
+
+	fileHeader := fileHeaders[0]
+	err = S.FileStorage.WriteFile(ctx, fileHeader)
 	if err != nil {
 		fmt.Println(err)
-		return images
+	} else {
+		fmt.Printf("Put image %s to S3\n", fileHeader.Filename)
 	}
 
-	for _, fileHeader := range fileHeaders {
-		err = s.FileStorage.Upload(ctx, fileHeader)
-		if err != nil {
-			fmt.Println(err)
-		} else {
-			fmt.Printf("Put image %s to S3\n", fileHeader.Filename)
-		}
-		imageCount := s.ImageIndex.IncrImageCount(ctx)
-		image := &Image{
-			ID: imageCount
-			URI: fileHeader.FileName,
-		}
-
-		err = s.ImageIndex.AddImage(ctx, fileHeader.Filename, []string{"mytag"})
-		if err != nil {
-			fmt.Println(err)
-		} else {
-			fmt.Printf("Put image %s to redis\n", fileHeader.Filename)
-		}
+	image, err = image.Save(ctx)
+	if err != nil {
+		return nil, err
 	}
+	return image, nil
+}
+
+func (i *Image) Save(ctx context.Context) (*Image, error) {
+	return S.ImageRepository.Save(ctx, i)
 }

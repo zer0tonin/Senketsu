@@ -1,4 +1,4 @@
-package main
+package services
 
 import (
 	"mime"
@@ -16,7 +16,7 @@ func NewMultipartParser(maxMem int64) *MultipartParser {
 	}
 }
 
-func (m *MultipartParser) GetFileHeaders(r *http.Request) (result []*multipart.FileHeader, err error) {
+func (m *MultipartParser) ParseForm(r *http.Request) (result []*multipart.FileHeader, err error) {
 	_, params, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	if err != nil {
 		return

@@ -1,4 +1,4 @@
-package main
+package services
 
 import (
 	"context"
@@ -8,18 +8,18 @@ import (
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
-type S3Client struct {
+type S3Storage struct {
 	bucketName string
 	client     *minio.Client
 }
 
-func NewS3Client(
+func NewS3Storage(
 	endpoint string,
 	accessKeyID string,
 	secretAccessKey string,
 	useSSL bool,
 	bucketName string,
-) *S3Client {
+) *S3Storage {
 	minioClient, err := minio.New(
 		endpoint,
 		&minio.Options{
@@ -35,13 +35,13 @@ func NewS3Client(
 		panic("Failed to create S3 client")
 	}
 
-	return &S3Client{
+	return &S3Storage{
 		bucketName: bucketName,
 		client:     minioClient,
 	}
 }
 
-func (s *S3Client) Upload(ctx context.Context, fileHeader *multipart.FileHeader) error {
+func (s *S3Storage) WriteFile(ctx context.Context, fileHeader *multipart.FileHeader) error {
 	file, err := fileHeader.Open()
 	if err != nil {
 		return err

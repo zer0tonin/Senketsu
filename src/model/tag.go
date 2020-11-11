@@ -6,12 +6,6 @@ import (
 	"math/rand"
 )
 
-type TagRepository interface {
-	Get(ctx context.Context, id string) (*Tag, error)
-	List(ctx context.Context) ([]*Tag, error)
-	Save(ctx context.Context, tag *Tag) (*Tag, error)
-}
-
 type Tag struct {
 	Name   string   `json:"name"`
 	Images []string `json:"images"`

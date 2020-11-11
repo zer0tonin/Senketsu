@@ -16,6 +16,13 @@ type RedisImageRepository struct {
 	prefix string
 }
 
+func NewRedisImageRepository(client *redis.Client, prefix string) *RedisImageRepository {
+	return &RedisImageRepository{
+		client: client,
+		prefix: prefix,
+	}
+}
+
 func (r *RedisImageRepository) makeKey() string {
 	return fmt.Sprintf("%s:images", r.prefix)
 }

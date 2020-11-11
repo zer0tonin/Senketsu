@@ -1,35 +1,16 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"html/template"
-	"mime/multipart"
 	"net/http"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/spf13/viper"
+
+	"github.com/zer0tonin/senketsu/src/model"
+	"github.com/zer0tonin/senketsu/src/services"
 )
-
-type RequestParser interface {
-	GetFileHeaders(r *http.Request) (result []*multipart.FileHeader, err error)
-}
-
-type ImageIndex interface {
-	AddImage(ctx context.Context, uri string, tags []string) (err error)
-}
-
-type FileStorage interface {
-	Upload(ctx context.Context, fileHeader *multipart.FileHeader) (err error)
-}
-
-type Services struct {
-	ImageIndex    ImageIndex
-	FileStorage   FileStorage
-	RequestParser RequestParser
-	Templates     map[string]*template.Template
-}
-
-var s Services
 
 func init() {
 	viper.SetConfigName("config")
@@ -43,9 +24,9 @@ func init() {
 	templates := make(map[string]*template.Template)
 	templates["index"] = template.Must(template.ParseFiles("./templates/index.html"))
 
-	multipartParser := NewMultipartParser(viper.GetInt64("multipartParser.maxMem"))
+	multipartParser := services.NewMultipartParser(viper.GetInt64("multipartParser.maxMem"))
 
-	s3Client := NewS3Client(
+	s3Storage := services.NewS3Storage(
 		viper.GetString("s3.endpoint"),
 		viper.GetString("s3.accessKeyID"),
 		viper.GetString("s3.secretAccessKey"),
@@ -53,22 +34,26 @@ func init() {
 		viper.GetString("s3.bucket"),
 	)
 
-	redisImageIndex := NewRedisImageIndex(
-		viper.GetString("redis.address"),
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: viper.GetString("redis.address"),
+	})
+
+	redisImageRepository := services.NewRedisImageRepository(
+		redisClient,
 		viper.GetString("redis.prefix"),
 	)
 
-	s = Services{
-		RequestParser: multipartParser,
-		FileStorage:   s3Client,
-		Templates:     templates,
-		ImageIndex:    redisImageIndex,
+	model.S = model.Services{
+		RequestParser:   multipartParser,
+		ImageRepository: redisImageRepository,
+		FileStorage:     s3Storage,
+		Templates:       templates,
 	}
 }
 
 func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		s.Templates["index"].Execute(w, nil)
+		model.S.Templates["index"].Execute(w, nil)
 	})
 
 	http.HandleFunc("/index.css", func(w http.ResponseWriter, r *http.Request) {
@@ -77,27 +62,7 @@ func main() {
 
 	http.HandleFunc("/upload", func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-
-		fileHeaders, err := s.RequestParser.GetFileHeaders(r)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		for _, fileHeader := range fileHeaders {
-			err = s.FileStorage.Upload(ctx, fileHeader)
-			if err != nil {
-				fmt.Println(err)
-			} else {
-				fmt.Printf("Put image %s to S3\n", fileHeader.Filename)
-			}
-			err = s.ImageIndex.AddImage(ctx, fileHeader.Filename, []string{"mytag"})
-			if err != nil {
-				fmt.Println(err)
-			} else {
-				fmt.Printf("Put image %s to redis\n", fileHeader.Filename)
-			}
-		}
+		model.NewImageFromRequest(ctx, r)
 	})
 
 	fmt.Println("Listening on port 8080")
