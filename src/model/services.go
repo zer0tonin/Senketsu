@@ -3,6 +3,7 @@ package model
 import (
 	"context"
 	"net/http"
+	"net/url"
 )
 
 type TagRepository interface {
@@ -24,7 +25,7 @@ type RequestParser interface {
 
 type FileStorage interface {
 	WriteFile(ctx context.Context, image *Image) error
-	GetURI(image *Image) string
+	GetURL(image *Image) (*url.URL, error)
 }
 
 type Views interface {

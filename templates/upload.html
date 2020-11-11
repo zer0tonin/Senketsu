@@ -8,11 +8,11 @@
         <div class="flex-container">
             <div class="upload-container">
                 {{ range .images }}
-                    <img src="{{ .GetURI }}" />
+                    <img src="{{ .GetPublicURL }}" />
                 {{ end }}
                 {{ range .errs }}
                     <p>
-                        {{ .error }}
+                        {{ .Error }}
                     </p>
                 {{ end }}
             </div>

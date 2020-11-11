@@ -5,17 +5,19 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 
 	"github.com/google/uuid"
+	"github.com/spf13/viper"
 )
 
 type Image struct {
 	ID        string `json:"id"`
-	Extension string `json:"id"`
+	Extension string `json:"extension"`
 	//Uploader string   `json:"uploader"`
 	//Tags     []string `json:"tags"`
-	Reader io.Reader
-	Size   int64
+	Reader io.Reader `json:"-"`
+	Size   int64     `json:"size"`
 }
 
 func NewImageFromRequest(ctx context.Context, r *http.Request) (images []*Image, errs []error) {
@@ -56,8 +58,17 @@ func (i *Image) Save(ctx context.Context) (*Image, error) {
 	return S.ImageRepository.Save(ctx, i)
 }
 
-func (i *Image) GetURI() string {
-	return S.FileStorage.GetURI(i)
+func (i *Image) GetStorageURL() (*url.URL, error) {
+	return S.FileStorage.GetURL(i)
+}
+
+func (i *Image) GetPublicURL() string {
+	host := viper.GetString("host")
+	if host[len(host)-1] == '/' {
+		return fmt.Sprintf("%sfiles/%s.%s", host, i.ID, i.Extension)
+	} else {
+		return fmt.Sprintf("%s/files/%s.%s", host, i.ID, i.Extension)
+	}
 }
 
 func (i *Image) GetFilename() string {

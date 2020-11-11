@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"net/http/httputil"
+	"regexp"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/gorilla/mux"
 	"github.com/spf13/viper"
 
 	"github.com/zer0tonin/senketsu/src/model"
@@ -52,20 +55,21 @@ func main() {
 	templates["index"] = template.Must(template.ParseFiles("./templates/index.html"))
 	templates["upload"] = template.Must(template.ParseFiles("./templates/upload.html"))
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	r := mux.NewRouter()
+
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		err := templates["index"].Execute(w, nil)
 		if err != nil {
 			fmt.Println(err)
 		}
 	})
 
-	http.HandleFunc("/index.css", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/index.css", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./templates/index.css")
 	})
 
-	http.HandleFunc("/upload", func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		images, errs := model.NewImageFromRequest(ctx, r)
+	r.HandleFunc("/upload", func(w http.ResponseWriter, r *http.Request) {
+		images, errs := model.NewImageFromRequest(r.Context(), r)
 		err := templates["upload"].Execute(
 			w,
 			map[string]interface{}{
@@ -78,6 +82,40 @@ func main() {
 		}
 	})
 
+	imagesRegexp := regexp.MustCompile(`.+\/(.+)\.gif`)
+	r.HandleFunc("/files/{path}", func(w http.ResponseWriter, r *http.Request) {
+		matches := imagesRegexp.FindStringSubmatch(r.URL.Path)
+		if len(matches) == 2 {
+			image, err := model.S.ImageRepository.Get(r.Context(), matches[1])
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			if image == nil {
+				fmt.Println("404") //TODO
+				return
+			}
+
+			url, err := image.GetStorageURL()
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			director := func(req *http.Request) {
+				req.URL = url
+				req.Header.Set("X-Forwarded-Host", req.Header.Get("Host"))
+				req.Host = url.Host
+			}
+
+			proxy := &httputil.ReverseProxy{Director: director}
+			proxy.ServeHTTP(w, r)
+		} else {
+			fmt.Println("404") //TODO
+		}
+	})
+
+	http.Handle("/", r)
 	fmt.Println("Listening on port 8080")
 	http.ListenAndServe(":8080", nil)
 }

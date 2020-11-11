@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -67,6 +68,6 @@ func (s *S3Storage) WriteFile(
 	return err
 }
 
-func (s *S3Storage) GetURI(image *model.Image) string {
-	return fmt.Sprintf("%s/%s", s.baseURI, image.GetFilename())
+func (s *S3Storage) GetURL(image *model.Image) (*url.URL, error) {
+	return url.Parse(fmt.Sprintf("%s/%s", s.baseURI, image.GetFilename()))
 }

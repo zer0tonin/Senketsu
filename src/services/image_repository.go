@@ -37,6 +37,7 @@ func (r *RedisImageRepository) Get(ctx context.Context, id string) (image *model
 		return
 	}
 
+	image = &model.Image{}
 	err = json.Unmarshal([]byte(result.Val()), image)
 	return
 }
@@ -82,7 +83,6 @@ func (r *RedisImageRepository) Save(ctx context.Context, image *model.Image) (*m
 			r.makeKey(),
 			image.ID,
 			ser,
-			0,
 		)
 		return image, result.Err()
 	}

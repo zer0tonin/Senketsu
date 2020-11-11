@@ -30,6 +30,7 @@ func (r *RedisTagRepository) Get(ctx context.Context, id string) (tag *model.Tag
 		return
 	}
 
+	tag = &model.Tag{}
 	err = json.Unmarshal([]byte(result.Val()), tag)
 	return
 }

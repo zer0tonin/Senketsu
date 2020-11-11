@@ -1,3 +1,4 @@
+host: http://localhost:8080
 multipartParser:
   maxMem: 134217728
 s3:
