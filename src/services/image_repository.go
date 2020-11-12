@@ -65,7 +65,7 @@ func (r *RedisImageRepository) List(ctx context.Context) (images []*model.Image,
 	}
 
 	for _, ser := range result.Val() {
-		var image *model.Image
+		image := &model.Image{}
 		if err := json.Unmarshal([]byte(ser), image); err != nil {
 			return nil, err
 		}
