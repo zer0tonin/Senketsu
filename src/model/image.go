@@ -15,7 +15,7 @@ type Image struct {
 	ID        string `json:"id"`
 	Extension string `json:"extension"`
 	//Uploader string   `json:"uploader"`
-	//Tags     []string `json:"tags"`
+	Tags     []string `json:"tags"`
 	Reader io.Reader `json:"-"`
 	Size   int64     `json:"size"`
 }

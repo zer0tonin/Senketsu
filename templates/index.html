@@ -10,12 +10,12 @@
                 <form action="upload" method="post" enctype="multipart/form-data">
                     <input type="file" id="gif" accept="image/gif, video/mpeg, video/webm" name="file" />
                     <label for="gif">Browse Files</label>
-                    <input type="submit" name="submit">
+                    <br />
                     {{ range .tags }}
-                        <p>
-                            {{ .Name }}
-                        </p>
+                        <input type="checkbox" id="tags_{{ .Name }}" name="tags" value="{{ .Name }}">
+                        <label for="tags_{{ .Name }}">{{ .Name }}</label><br>
                     {{ end }}
+                    <input type="submit" name="submit">
                 </form>
             </div>
         </div>

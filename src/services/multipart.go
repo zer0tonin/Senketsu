@@ -1,8 +1,6 @@
 package services
 
 import (
-	"mime"
-	"mime/multipart"
 	"net/http"
 
 	"github.com/zer0tonin/senketsu/src/model"
@@ -19,20 +17,15 @@ func NewMultipartParser(maxMem int64) *MultipartParser {
 }
 
 func (m *MultipartParser) ParseForm(r *http.Request) (result []*model.Image, errs []error) {
-	_, params, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
+	err := r.ParseMultipartForm(m.maxMem)
 	if err != nil {
 		errs = append(errs, err)
 		return
 	}
+	form := r.MultipartForm
+	data := r.PostForm
 
-	mr := multipart.NewReader(r.Body, params["boundary"])
-	form, err := mr.ReadForm(m.maxMem) // 128MiB
-	if err != nil {
-		errs = append(errs, err)
-		return
-	}
-
-	for _, fileHeaders := range form.File {
+	for _, fileHeaders := range form.File { // FIXME: files need to be ordered in some way to match tags or idk
 		for _, fileHeader := range fileHeaders {
 			file, err := fileHeader.Open()
 			if err != nil {
@@ -42,6 +35,7 @@ func (m *MultipartParser) ParseForm(r *http.Request) (result []*model.Image, err
 					Extension: "gif", // FIXME: need to validate file types
 					Reader:    file,
 					Size:      fileHeader.Size,
+					Tags:      data["tags"],
 				}
 				result = append(result, image)
 			}
