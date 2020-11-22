@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -40,10 +41,27 @@ func init() {
 		viper.GetString("redis.prefix"),
 	)
 
+	redisTagRepository := services.NewRedisTagRepository(
+		redisClient,
+		viper.GetString("redis.prefix"),
+	)
+
 	model.S = model.Services{
 		RequestParser:   multipartParser,
 		ImageRepository: redisImageRepository,
+		TagRepository:   redisTagRepository,
 		FileStorage:     s3Storage,
+	}
+
+	tags := viper.GetStringSlice("defaultTags")
+	for _, tagName := range tags {
+		tag := &model.Tag{
+			Name: tagName,
+		}
+		_, err := tag.Save(context.Background())
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 }
 

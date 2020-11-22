@@ -10,3 +10,6 @@ s3:
 redis:
   address: redis:6379
   prefix: senketsu
+defaultTags:
+  - cats
+  - dogs

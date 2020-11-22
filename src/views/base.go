@@ -20,7 +20,17 @@ func BaseHandler() *mux.Router {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		err := templates["index"].Execute(w, nil)
+		tags, err := model.S.TagRepository.List(r.Context())
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		err = templates["index"].Execute(
+			w,
+			map[string]interface{}{
+				"tags": tags,
+			},
+		)
 		if err != nil {
 			fmt.Println(err)
 		}

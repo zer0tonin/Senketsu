@@ -16,6 +16,13 @@ type RedisTagRepository struct {
 	prefix string
 }
 
+func NewRedisTagRepository(client *redis.Client, prefix string) *RedisTagRepository {
+	return &RedisTagRepository{
+		client: client,
+		prefix: prefix,
+	}
+}
+
 func (r *RedisTagRepository) makeKey() string {
 	return fmt.Sprintf("%s:tags", r.prefix)
 }
@@ -42,7 +49,7 @@ func (r *RedisTagRepository) List(ctx context.Context) (tags []*model.Tag, err e
 	}
 
 	for _, ser := range result.Val() {
-		var tag *model.Tag
+		tag := &model.Tag{}
 		if err := json.Unmarshal([]byte(ser), tag); err != nil {
 			return nil, err
 		}
@@ -60,7 +67,6 @@ func (r *RedisTagRepository) Save(ctx context.Context, tag *model.Tag) (*model.T
 			r.makeKey(),
 			slug.Make(tag.Name),
 			ser,
-			0,
 		)
 		return tag, result.Err()
 	}
