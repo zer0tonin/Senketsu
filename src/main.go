@@ -55,9 +55,7 @@ func init() {
 
 	tags := viper.GetStringSlice("defaultTags")
 	for _, tagName := range tags {
-		tag := &model.Tag{
-			Name: tagName,
-		}
+		tag := model.NewTag(tagName)
 		_, err := tag.Save(context.Background())
 		if err != nil {
 			fmt.Println(err)

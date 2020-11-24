@@ -11,24 +11,30 @@ type Tag struct {
 	Images []string `json:"images"`
 }
 
-func (t *Tag) getImages() []string {
-	if t.Images == nil {
-		t.Images = make([]string, 1)
+func NewTag(name string) *Tag {
+	return &Tag{
+		Name: name,
+		Images: make([]string, 0),
 	}
-	return t.Images
 }
 
-func (t *Tag) AddImage(ctx context.Context, image *Image) error {
-	t.Images = append(t.getImages(), image.ID)
-	return nil
+func (t *Tag) AddImage(image *Image) {
+	// TODO : could be optimized by making t.Images a set
+	for _, i := range t.Images {
+		if i == image.ID {
+			return
+		}
+	}
+	t.Images = append(t.Images, image.ID)
+	return
 }
 
 func (t *Tag) GetImages(ctx context.Context, image *Image) ([]*Image, error) {
-	return S.ImageRepository.GetMany(ctx, t.getImages())
+	return S.ImageRepository.GetMany(ctx, t.Images)
 }
 
 func (t *Tag) GetRandomImage(ctx context.Context) (*Image, error) {
-	images := t.getImages()
+	images := t.Images
 	if len(images) == 0 {
 		return nil, fmt.Errorf("No images found for this tag")
 	}

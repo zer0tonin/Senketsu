@@ -55,6 +55,11 @@ func NewImageFromRequest(ctx context.Context, r *http.Request) (images []*Image,
 }
 
 func (i *Image) Save(ctx context.Context) (*Image, error) {
+	for _, tagName := range i.Tags {
+		tag, _:= S.TagRepository.Get(ctx, tagName)
+		tag.AddImage(i)
+		tag.Save(ctx)
+	}
 	return S.ImageRepository.Save(ctx, i)
 }
 
