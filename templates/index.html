@@ -2,23 +2,72 @@
     <head>
         <title>Senketsu</title>
         <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css" />
+        <link rel="stylesheet" href="https://unpkg.com/bulmaswatch/superhero/bulmaswatch.min.css">
+        <script defer src="https://use.fontawesome.com/releases/v5.14.0/js/all.js"></script>
         <link rel="stylesheet" href="/index.css" />
+        <meta name="viewport" content="width=device-width, initial-scale=1">
     </head>
     <body>
-        <div class="flex-container">
-            <div class="upload-container">
-                <form action="upload" method="post" enctype="multipart/form-data">
-                    <input type="file" id="gif" accept="image/gif, video/mpeg, video/webm" name="file" />
-                    <label for="gif" class="ui huge red right floated button">Browse Files</label>
-                    <br />
-                    {{ range .tags }}
-                        <input type="checkbox" id="tags_{{ .Name }}" name="tags" value="{{ .Name }}">
-                        <label for="tags_{{ .Name }}">{{ .Name }}</label><br>
-                    {{ end }}
-                    <input type="submit" name="submit">
-                </form>
+        <nav class="navbar" role="navigation" aria-label="main navigation">
+            <div class="navbar-brand">
+                <a class="title navbar-item" href="/">
+                    SENKETSU
+                </a>
             </div>
-        </div>
+            <a class="navbar-item" href="/images">
+                Browse
+            </a>
+        </nav>
+        <main>
+            <div class="container">
+                <div class="columns is-centered">
+                    <div class="column is-half">
+                        <h2 class="title">
+                            Upload a gif
+                        </h2>
+                        <form action="upload" method="post" enctype="multipart/form-data">
+                            <div class="file" id="gif-input">
+                                <label class="file-label" for="gif">
+                                    <input type="file" id="gif" accept="image/gif, video/mpeg, video/webm" name="file" class="file input" />
+                                    <span class="file-cta">
+                                        <span class="file-icon">
+                                            <i class="fas fa-upload"></i>
+                                        </span>
+                                        <span class="file-label">
+                                            Browse Files
+                                        </span>
+                                    </span>
+                                    <span class="file-name">
+                                        No file
+                                    </span>
+                                </label>
+                            </div>
+                            <br />
+                            <p>
+                                Choose tags:
+                            </p>
+                            {{ range .tags }}
+                                <label for="tags_{{ .Name }}" class="checkbox">
+                                    <input type="checkbox" class="checkbox" id="tags_{{ .Name }}" name="tags" value="{{ .Name }}">
+                                    {{ .Name }}
+                                </label>
+                                <br />
+                            {{ end }}
+                            <br />
+                            <input type="submit" name="submit" class="button is-primary">
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
     </body>
+    <script>
+      const fileInput = document.querySelector('#gif-input input[type=file]');
+      fileInput.onchange = () => {
+        if (fileInput.files.length > 0) {
+          const fileName = document.querySelector('#gif-input .file-name');
+          fileName.textContent = fileInput.files[0].name;
+        }
+      }
+    </script>
 </html>
