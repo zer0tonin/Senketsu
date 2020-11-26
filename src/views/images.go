@@ -13,8 +13,8 @@ import (
 func ImagesHandler() *mux.Router {
 	r := mux.NewRouter()
 	templates := make(map[string]*template.Template)
-	templates["image"] = template.Must(template.ParseFiles("./templates/image.html"))
-	templates["images"] = template.Must(template.ParseFiles("./templates/images.html"))
+	templates["image"] = template.Must(template.ParseFiles("./templates/base.html", "./templates/image.html"))
+	templates["images"] = template.Must(template.ParseFiles("./templates/base.html", "./templates/images.html"))
 
 	r.HandleFunc("/images/", func(w http.ResponseWriter, r *http.Request) {
 		images, err := model.S.ImageRepository.List(r.Context())

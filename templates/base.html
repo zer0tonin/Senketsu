@@ -1,0 +1,29 @@
+<html>
+    <head>
+        <title>Senketsu</title>
+        <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://unpkg.com/bulmaswatch/superhero/bulmaswatch.min.css">
+        <script defer src="https://use.fontawesome.com/releases/v5.14.0/js/all.js"></script>
+        <link rel="stylesheet" href="/index.css" />
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+    </head>
+    <body>
+        <nav class="navbar" role="navigation" aria-label="main navigation">
+            <div class="navbar-brand">
+                <a class="title navbar-item" href="/">
+                    SENKETSU
+                </a>
+            </div>
+            <a class="navbar-item" href="/images">
+                Browse
+            </a>
+        </nav>
+        <main>
+            <div class="container">
+                {{template "content" .}}
+            </div>
+        </main>
+    </body>
+    <script src="/index.js">
+    </script>
+</html>

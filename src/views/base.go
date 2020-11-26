@@ -14,8 +14,8 @@ import (
 
 func BaseHandler() *mux.Router {
 	templates := make(map[string]*template.Template)
-	templates["index"] = template.Must(template.ParseFiles("./templates/index.html"))
-	templates["upload"] = template.Must(template.ParseFiles("./templates/upload.html"))
+	templates["index"] = template.Must(template.ParseFiles("./templates/base.html", "./templates/index.html"))
+	templates["upload"] = template.Must(template.ParseFiles("./templates/base.html", "./templates/upload.html"))
 
 	r := mux.NewRouter()
 
@@ -39,6 +39,11 @@ func BaseHandler() *mux.Router {
 	r.HandleFunc("/index.css", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/css")
 		http.ServeFile(w, r, "./templates/index.css")
+	})
+
+	r.HandleFunc("/index.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript")
+		http.ServeFile(w, r, "./templates/index.js")
 	})
 
 	r.HandleFunc("/upload", func(w http.ResponseWriter, r *http.Request) {
