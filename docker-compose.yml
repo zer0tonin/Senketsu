@@ -8,6 +8,20 @@ services:
     ports:
       - 8080:8080
 
+  senketsu-dev:
+    image: cosmtrek/air:v1.15.1
+    depends_on:
+      - minio
+      - redis
+    working_dir: "/senketsu"
+    environment:
+      air_wd: "/senketsu"
+    volumes:
+      - .:/senketsu
+    ports:
+      - 8080:8080
+    command: air -c .air.toml
+
   minio:
     image: minio/minio:latest
     environment:
