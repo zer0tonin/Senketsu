@@ -36,27 +36,35 @@ func init() {
 		Addr: viper.GetString("redis.address"),
 	})
 
-	redisImageRepository := services.NewRedisImageRepository(
+	redisPrefix := viper.GetString("redis.prefix")
+
+	redisImageRepository := services.NewRedisRepository(
 		redisClient,
-		viper.GetString("redis.prefix"),
+		fmt.Sprintf("%s:images", redisPrefix),
 	)
 
-	redisTagRepository := services.NewRedisTagRepository(
+	redisTagRepository := services.NewRedisRepository(
 		redisClient,
-		viper.GetString("redis.prefix"),
+		fmt.Sprintf("%s:tags", redisPrefix),
+	)
+
+	redisUserRepository := services.NewRedisRepository(
+		redisClient,
+		fmt.Sprintf("%s:tags", redisPrefix),
 	)
 
 	model.S = model.Services{
 		RequestParser:   multipartParser,
-		ImageRepository: redisImageRepository,
-		TagRepository:   redisTagRepository,
+		ImageRepository: model.NewImageRepository(redisImageRepository),
+		TagRepository:   model.NewTagRepository(redisTagRepository),
+		UserRepository:  model.NewUserRepository(redisUserRepository),
 		FileStorage:     s3Storage,
 	}
 
 	tags := viper.GetStringSlice("defaultTags")
 	for _, tagName := range tags {
 		tag := model.NewTag(tagName)
-		_, err := tag.Save(context.Background())
+		err := tag.Save(context.Background())
 		if err != nil {
 			fmt.Println(err)
 		}

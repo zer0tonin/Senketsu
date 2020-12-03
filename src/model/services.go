@@ -6,17 +6,15 @@ import (
 	"net/url"
 )
 
-type TagRepository interface {
-	Get(ctx context.Context, id string) (*Tag, error)
-	List(ctx context.Context) ([]*Tag, error)
-	Save(ctx context.Context, tag *Tag) (*Tag, error)
+type Entity interface {
+	GetID() string
 }
 
-type ImageRepository interface {
-	Get(ctx context.Context, id string) (*Image, error)
-	GetMany(ctx context.Context, ids []string) ([]*Image, error)
-	List(ctx context.Context) ([]*Image, error)
-	Save(ctx context.Context, image *Image) (*Image, error)
+type Repository interface {
+	Get(ctx context.Context, id string) (Entity, error)
+	GetMany(ctx context.Context, ids []string) ([]Entity, error)
+	List(ctx context.Context) ([]Entity, error)
+	Save(ctx context.Context, entity Entity) (error)
 }
 
 type RequestParser interface {
@@ -43,8 +41,9 @@ type AuthenticationProvider interface {
 }
 
 type Services struct {
-	ImageRepository ImageRepository
-	TagRepository   TagRepository
+	*ImageRepository
+	*TagRepository
+	*UserRepository
 	RequestParser   RequestParser
 	FileStorage     FileStorage
 	Views           Views

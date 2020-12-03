@@ -26,14 +26,6 @@ func NewImageFromRequest(ctx context.Context, r *http.Request) (images []*Image,
 		return nil, errs
 	}
 
-	for _, image := range images {
-		imageID, err := uuid.NewRandom()
-		if err != nil {
-			errs = append(errs, err)
-		}
-		image.ID = imageID.String()
-	}
-
 	if len(errs) != 0 {
 		return nil, errs
 	}
@@ -46,7 +38,7 @@ func NewImageFromRequest(ctx context.Context, r *http.Request) (images []*Image,
 		}
 		fmt.Printf("Put image %s to S3\n", image.GetFilename())
 		// TODO: risks of orphan images
-		_, err = image.Save(ctx)
+		err = image.Save(ctx)
 		if err != nil {
 			errs = append(errs, err)
 		}
@@ -54,7 +46,18 @@ func NewImageFromRequest(ctx context.Context, r *http.Request) (images []*Image,
 	return images, errs
 }
 
-func (i *Image) Save(ctx context.Context) (*Image, error) {
+func (i *Image) GetID() string {
+	if i.ID == "" {
+		imageID, err := uuid.NewRandom()
+		if err != nil {
+			panic("UUID generation broken")
+		}
+		i.ID = imageID.String()
+	}
+	return i.ID
+}
+
+func (i *Image) Save(ctx context.Context) (error) {
 	for _, tagName := range i.Tags {
 		tag, _:= S.TagRepository.Get(ctx, tagName)
 		tag.AddImage(i)

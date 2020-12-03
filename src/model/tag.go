@@ -18,6 +18,10 @@ func NewTag(name string) *Tag {
 	}
 }
 
+func (t *Tag) GetID() string {
+	return t.Name
+}
+
 func (t *Tag) AddImage(image *Image) {
 	// TODO : could be optimized by making t.Images a set
 	for _, i := range t.Images {
@@ -42,6 +46,6 @@ func (t *Tag) GetRandomImage(ctx context.Context) (*Image, error) {
 	return S.ImageRepository.Get(ctx, t.Images[pick])
 }
 
-func (t *Tag) Save(ctx context.Context) (tag *Tag, err error) {
+func (t *Tag) Save(ctx context.Context) (err error) {
 	return S.TagRepository.Save(ctx, t)
 }
