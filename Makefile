@@ -10,3 +10,6 @@ down:
 
 dev:
 	docker-compose up senketsu-dev
+
+test:
+	go test github.com/zer0tonin/senketsu/src/...
