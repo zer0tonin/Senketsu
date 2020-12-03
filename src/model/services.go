@@ -33,12 +33,22 @@ type Views interface {
 	UploadResults(w http.ResponseWriter, images []*Image)
 }
 
+type AuthenticationToken interface {
+	TokenResponse(w http.ResponseWriter)
+}
+
+type AuthenticationProvider interface {
+	Request(ctx context.Context, u *User, w http.ResponseWriter)
+	Callback(ctx context.Context, u *User, w http.ResponseWriter) AuthenticationToken
+}
+
 type Services struct {
 	ImageRepository ImageRepository
 	TagRepository   TagRepository
 	RequestParser   RequestParser
 	FileStorage     FileStorage
 	Views           Views
+	AuthenticationProvider AuthenticationProvider
 }
 
 var S Services

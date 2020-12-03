@@ -4,6 +4,13 @@ type UserRepository interface {
 }
 
 type User struct {
-	Login    string `json:"login"`
-	Password string `json:"password"`
+	Name     string `json:"name"`
+	Images   []string `json:"images"`
+}
+
+func NewUser(name string) *User {
+	return &User{
+		Name: name,
+		Images: make([]string, 0),
+	}
 }
