@@ -38,26 +38,26 @@ func init() {
 
 	redisPrefix := viper.GetString("redis.prefix")
 
-	redisImageRepository := services.NewRedisRepository(
+	imagesRedis := services.NewRedis(
 		redisClient,
 		fmt.Sprintf("%s:images", redisPrefix),
 	)
 
-	redisTagRepository := services.NewRedisRepository(
+	tagsRedis := services.NewRedis(
 		redisClient,
 		fmt.Sprintf("%s:tags", redisPrefix),
 	)
 
-	redisUserRepository := services.NewRedisRepository(
+	userRedis := services.NewRedis(
 		redisClient,
 		fmt.Sprintf("%s:tags", redisPrefix),
 	)
 
 	model.S = model.Services{
 		RequestParser:   multipartParser,
-		ImageRepository: model.NewImageRepository(redisImageRepository),
-		TagRepository:   model.NewTagRepository(redisTagRepository),
-		UserRepository:  model.NewUserRepository(redisUserRepository),
+		ImageRepository: services.NewImageRepository(imagesRedis),
+		TagRepository:   services.NewTagRepository(tagsRedis),
+		UserRepository:  services.NewUserRepository(userRedis),
 		FileStorage:     s3Storage,
 	}
 

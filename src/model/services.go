@@ -10,11 +10,25 @@ type Entity interface {
 	GetID() string
 }
 
-type Repository interface {
-	Get(ctx context.Context, id string) (Entity, error)
-	GetMany(ctx context.Context, ids []string) ([]Entity, error)
-	List(ctx context.Context) ([]Entity, error)
-	Save(ctx context.Context, entity Entity) (error)
+type ImageRepository interface {
+	Get(ctx context.Context, id string) (*Image, error)
+	GetMany(ctx context.Context, ids []string) ([]*Image, error)
+	List(ctx context.Context) ([]*Image, error)
+	Save(ctx context.Context, image *Image) (error)
+}
+
+type TagRepository interface {
+	Get(ctx context.Context, id string) (*Tag, error)
+	GetMany(ctx context.Context, ids []string) ([]*Tag, error)
+	List(ctx context.Context) ([]*Tag, error)
+	Save(ctx context.Context, tag *Tag) (error)
+}
+
+type UserRepository interface {
+	Get(ctx context.Context, id string) (*User, error)
+	GetMany(ctx context.Context, ids []string) ([]*User, error)
+	List(ctx context.Context) ([]*User, error)
+	Save(ctx context.Context, user *User) (error)
 }
 
 type RequestParser interface {
@@ -41,9 +55,9 @@ type AuthenticationProvider interface {
 }
 
 type Services struct {
-	*ImageRepository
-	*TagRepository
-	*UserRepository
+	ImageRepository ImageRepository
+	TagRepository TagRepository
+	UserRepository UserRepository
 	RequestParser   RequestParser
 	FileStorage     FileStorage
 	Views           Views
