@@ -18,11 +18,13 @@ func BaseHandler() *mux.Router {
 	templates["upload"] = template.Must(template.ParseFiles("./templates/base.html", "./templates/upload.html"))
 
 	r := mux.NewRouter()
+	r.Use(loggingMiddleware)
 
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		tags, err := model.S.TagRepository.List(r.Context())
 		if err != nil {
 			fmt.Println(err)
+			serveError(w, r, 500, "Failed to fetch tag list")
 			return
 		}
 		err = templates["index"].Execute(
@@ -33,6 +35,7 @@ func BaseHandler() *mux.Router {
 		)
 		if err != nil {
 			fmt.Println(err)
+			serveError(w, r, 500, "Failed to render")
 		}
 	})
 
@@ -48,6 +51,14 @@ func BaseHandler() *mux.Router {
 
 	r.HandleFunc("/upload", func(w http.ResponseWriter, r *http.Request) {
 		images, errs := model.NewImageFromRequest(r.Context(), r)
+		if len(errs) > 0 {
+			for _, err := range errs {
+				fmt.Println(err)
+			}
+			serveError(w, r, 400, "Failed to parse image")
+			return
+		}
+
 		err := templates["upload"].Execute(
 			w,
 			map[string]interface{}{
@@ -57,20 +68,26 @@ func BaseHandler() *mux.Router {
 		)
 		if err != nil {
 			fmt.Println(err)
+			serveError(w, r, 500, "Failed to render")
 		}
 	})
 
 	imagesRegexp := regexp.MustCompile(`.+\/(.+)\.gif`)
 	r.HandleFunc("/files/{path}", func(w http.ResponseWriter, r *http.Request) {
+		/*
+		Reverse proxy route for S3
+		*/
 		matches := imagesRegexp.FindStringSubmatch(r.URL.Path)
 		if len(matches) == 2 {
 			image, err := model.S.ImageRepository.Get(r.Context(), matches[1])
 			if err != nil {
 				fmt.Println(err)
+				w.WriteHeader(500)
 				return
 			}
 			if image == nil {
-				fmt.Println("404") //TODO
+				fmt.Println("Image not found")
+				w.WriteHeader(404)
 				return
 			}
 
@@ -89,7 +106,8 @@ func BaseHandler() *mux.Router {
 			proxy := &httputil.ReverseProxy{Director: director}
 			proxy.ServeHTTP(w, r)
 		} else {
-			fmt.Println("404") //TODO
+			fmt.Println("Image not found")
+			w.WriteHeader(404)
 		}
 	})
 
