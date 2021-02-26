@@ -19,7 +19,7 @@ func NewUserRepository(database Database) *UserRepository {
 
 func (r *UserRepository) unmarshal(ser []byte) (user *model.User, err error) {
 	err = json.Unmarshal(ser, &user)
-	return nil, err
+	return
 }
 
 func (r *UserRepository) marshal(user *model.User) (ser []byte, err error) {

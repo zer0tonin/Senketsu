@@ -19,7 +19,7 @@ func NewImageRepository(database Database) *ImageRepository {
 
 func (r *ImageRepository) unmarshal(ser []byte) (image *model.Image, err error) {
 	err = json.Unmarshal(ser, &image)
-	return nil, err
+	return
 }
 
 func (r *ImageRepository) marshal(image *model.Image) (ser []byte, err error) {

@@ -19,7 +19,7 @@ func NewTagRepository(database Database) *TagRepository {
 
 func (r *TagRepository) unmarshal(ser []byte) (tag *model.Tag, err error) {
 	err = json.Unmarshal(ser, &tag)
-	return nil, err
+	return
 }
 
 func (r *TagRepository) marshal(tag *model.Tag) (ser []byte, err error) {
