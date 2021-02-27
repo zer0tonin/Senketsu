@@ -80,5 +80,5 @@ func (i *Image) GetPublicURL() string {
 }
 
 func (i *Image) GetFilename() string {
-	return fmt.Sprintf("%s.%s", i.ID, i.Extension)
+	return fmt.Sprintf("%s.%s", i.GetID(), i.Extension)
 }

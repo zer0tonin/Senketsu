@@ -55,7 +55,7 @@ func BaseHandler() *mux.Router {
 			for _, err := range errs {
 				fmt.Println(err)
 			}
-			serveError(w, r, 400, "Failed to parse image")
+			serveError(w, r, 400, "Failed to upload image")
 			return
 		}
 
