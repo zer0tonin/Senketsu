@@ -3,22 +3,23 @@ package views
 import (
 	"fmt"
 	"html/template"
+	"os"
 	"net/http"
 	"net/http/httputil"
 	"regexp"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/handlers"
 
 	"github.com/zer0tonin/senketsu/src/model"
 )
 
-func BaseHandler() *mux.Router {
+func BaseHandler() http.Handler {
 	templates := make(map[string]*template.Template)
 	templates["index"] = template.Must(template.ParseFiles("./templates/base.html", "./templates/index.html"))
 	templates["upload"] = template.Must(template.ParseFiles("./templates/base.html", "./templates/upload.html"))
 
 	r := mux.NewRouter()
-	r.Use(loggingMiddleware)
 
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		tags, err := model.S.TagRepository.List(r.Context())
@@ -114,5 +115,8 @@ func BaseHandler() *mux.Router {
 	UsersHandler(r.PathPrefix("/users").Subrouter())
 	ImagesHandler(r.PathPrefix("/images").Subrouter())
 
-	return r
+	return handlers.LoggingHandler(
+		os.Stdout,
+		handlers.RecoveryHandler()(r),
+	)
 }
