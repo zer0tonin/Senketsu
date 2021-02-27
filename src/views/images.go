@@ -10,13 +10,12 @@ import (
 	"github.com/zer0tonin/senketsu/src/model"
 )
 
-func ImagesHandler() *mux.Router {
-	r := mux.NewRouter()
+func ImagesHandler(r *mux.Router) {
 	templates := make(map[string]*template.Template)
 	templates["image"] = template.Must(template.ParseFiles("./templates/base.html", "./templates/image.html"))
 	templates["images"] = template.Must(template.ParseFiles("./templates/base.html", "./templates/images.html"))
 
-	r.HandleFunc("/images/", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		images, err := model.S.ImageRepository.List(r.Context())
 		if err != nil {
 			fmt.Println(err)
@@ -35,7 +34,7 @@ func ImagesHandler() *mux.Router {
 		}
 	})
 
-	r.HandleFunc("/images/{id}", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/{id}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		image, err := model.S.ImageRepository.Get(r.Context(), vars["id"])
 		if err != nil {
@@ -56,9 +55,7 @@ func ImagesHandler() *mux.Router {
 		)
 		if err != nil {
 			fmt.Println(err)
-			serveError(w, r, 500, "Failed to execute")
+			serveError(w, r, 500, "Failed to render")
 		}
 	})
-
-	return r
 }

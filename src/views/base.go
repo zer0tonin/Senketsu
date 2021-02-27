@@ -111,5 +111,8 @@ func BaseHandler() *mux.Router {
 		}
 	})
 
+	UsersHandler(r.PathPrefix("/users").Subrouter())
+	ImagesHandler(r.PathPrefix("/images").Subrouter())
+
 	return r
 }

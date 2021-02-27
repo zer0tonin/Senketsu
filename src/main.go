@@ -73,7 +73,6 @@ func init() {
 
 func main() {
 	http.Handle("/", views.BaseHandler())
-	http.Handle("/images/", views.ImagesHandler())
 	fmt.Println("Listening on port 8080")
 	http.ListenAndServe(":8080", nil)
 }

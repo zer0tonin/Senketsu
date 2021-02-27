@@ -1,0 +1,7 @@
+{{define "content"}}
+    {{ range .users }}
+        <div class="tile">
+            <img src="{{ .Name }}" />
+        </div>
+    {{ end }}
+{{ end }}
